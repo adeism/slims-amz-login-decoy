@@ -35,9 +35,11 @@ Dokumen ini mendokumentasikan konsep, alur kerja detail, dan petunjuk operasiona
 > Jika SLiMS Anda mengalami error setelah pemasangan plugin atau Anda terkunci dari halaman login, Anda dapat menonaktifkan plugin ini secara cepat dengan mengubah nama folder `amz_login_decoy` di dalam direktori `plugins/` menjadi nama lain, misalnya `amz_login_decoy_nonaktif`. SLiMS akan secara otomatis mengabaikan plugin tersebut dan memulihkan halaman login bawaan.
 
 ---
+<img width="834" height="1803" alt="msedge_BI42WWbVby" src="https://github.com/user-attachments/assets/c4814281-2db2-4b5f-a608-2a57d478e084" />
+
 
 ## 🚀 Status Implementasi v1.0.0
-Plugin diimplementasikan secara **modular** (tidak ada satu pun file melebihi 1000 baris) di `plugins/amz_login_decoy/` dengan susunan berikut:
+Plugin diimplementasikan secara **modular**  `plugins/amz_login_decoy/` dengan susunan berikut:
 ```text
 plugins/amz_login_decoy/
 ├── amz_login_decoy.plugin.php   # Entry point utama untuk hook & menu
@@ -68,7 +70,7 @@ plugins/amz_login_decoy/
 
 ---
 
-## 📋 1. Latar Belakang, Masalah & Mengapa Menolak 2FA
+## 📋 1. Latar Belakang, Masalah & Mengapa tidak pakai 2FA
 Saat ini, URL login standar SLiMS:
 1.  OPAC Member Login: `index.php?p=login`
 2.  Staff Admin Login: `/admin` (atau `/admin/index.php`)
