@@ -35,11 +35,9 @@ Dokumen ini mendokumentasikan konsep, alur kerja detail, dan petunjuk operasiona
 > Jika SLiMS Anda mengalami error setelah pemasangan plugin atau Anda terkunci dari halaman login, Anda dapat menonaktifkan plugin ini secara cepat dengan mengubah nama folder `amz_login_decoy` di dalam direktori `plugins/` menjadi nama lain, misalnya `amz_login_decoy_nonaktif`. SLiMS akan secara otomatis mengabaikan plugin tersebut dan memulihkan halaman login bawaan.
 
 ---
-<img width="834" height="1803" alt="msedge_BI42WWbVby" src="https://github.com/user-attachments/assets/c4814281-2db2-4b5f-a608-2a57d478e084" />
-
 
 ## 🚀 Status Implementasi v1.0.0
-Plugin diimplementasikan secara **modular**  `plugins/amz_login_decoy/` dengan susunan berikut:
+Plugin diimplementasikan secara **modular** (tidak ada satu pun file melebihi 1000 baris) di `plugins/amz_login_decoy/` dengan susunan berikut:
 ```text
 plugins/amz_login_decoy/
 ├── amz_login_decoy.plugin.php   # Entry point utama untuk hook & menu
@@ -70,7 +68,7 @@ plugins/amz_login_decoy/
 
 ---
 
-## 📋 1. Latar Belakang, Masalah & Mengapa tidak pakai 2FA
+## 📋 1. Latar Belakang, Masalah & Mengapa Menolak 2FA
 Saat ini, URL login standar SLiMS:
 1.  OPAC Member Login: `index.php?p=login`
 2.  Staff Admin Login: `/admin` (atau `/admin/index.php`)
@@ -252,17 +250,31 @@ $plugin->registerMenu('opac', 'ld', __DIR__ . '/opac_menu.php');
 
 ---
 
-## 📊 6. Pencatatan Laporan (`system_log`)
-Setiap kali ada bot yang terjebak mengakses URL umpan atau URL rahasia tanpa token, plugin akan mencatat ke tabel `system_log` bawaan SLiMS agar dapat dipantau langsung oleh admin perpustakaan melalui menu **System > System Log**.
+## 📊 6. Arsitektur & Mekanisme Pencatatan Log (Multi-Layer Logging)
 
-Mekanisme pencatatan menggunakan fungsi bawaan:
+Untuk keandalan data dan pemantauan yang komprehensif, plugin menerapkan pencatatan log pada beberapa tingkat (layer) berbeda:
+
+### A. Laporan Serangan / Percobaan (Tabel Khusus `amzld_attempts`)
+Detail dari setiap upaya akses ilegal (ke URL honeypot atau pintu rahasia tanpa token) dicatat di tabel khusus plugin `amzld_attempts` dengan sistem **Agregasi & Deduplikasi Cerdas** berbasis kombinasi kunci unik (`ip_address` + `event_type` + `target`).
+*   **Username & Panjang Password**: Jika penyerang melakukan *spamming* dengan berbagai kata sandi/username, daftarnya akan ditambahkan secara unik dipisah tanda koma `, ` (misal: `admin, guest` dan `5, 8, 12`).
+*   **Counter Percobaan**: Kolom `attempt_count` bertambah seiring banyaknya serangan, dan `updated_at` merekam waktu aktivitas terakhir penyerang. Log ini disajikan secara visual pada tabel laporan di halaman dasbor admin plugin.
+
+### B. Laporan Audit Aktivitas Admin (Tabel Khusus `amzld_audit_logs`)
+Tindakan administratif yang dilakukan oleh admin perpustakaan disimpan di tabel `amzld_audit_logs` untuk mencegah penyalahgunaan wewenang dan mendeteksi perubahan konfigurasi yang tidak diinginkan.
+*   **Data yang Direkam**: ID Staf, Nama Lengkap, Alamat IP, Jenis Tindakan (seperti perubahan token rahasia, penghapusan daftar IP blokir, pengiriman email uji coba), serta rincian nilai parameter sebelum dan sesudah diubah.
+*   **Akses Data**: Data ini disajikan dalam modal popup interaktif di header dasbor admin.
+
+### C. Laporan Ringkasan Sistem (Tabel Core SLiMS `system_log`)
+Selain dicatat di tabel khusus di atas, ringkasan setiap kejadian pemblokiran atau penyaringan serangan tetap dikirimkan ke tabel inti `system_log` bawaan SLiMS agar admin perpustakaan tetap dapat memantau keamanan SLiMS melalui menu bawaan **System > System Log**.
+
+Mekanisme pencatatan ringkasan ke database core SLiMS menggunakan fungsi utilitas internal:
 ```php
 utility::writeLogs(
     $dbs, 
     'system', 
     'amz_login_decoy', 
     'Decoy Login', 
-    $safeMessage, 
+    $safeMessage, // Format: [AMZ Login Decoy] IP {ip_address} - {event_type} targeting {target}...
     'Login Guard', 
     'Block'
 );
