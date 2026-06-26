@@ -35,6 +35,7 @@ Dokumen ini mendokumentasikan konsep, alur kerja detail, dan petunjuk operasiona
 > Jika SLiMS Anda mengalami error setelah pemasangan plugin atau Anda terkunci dari halaman login, Anda dapat menonaktifkan plugin ini secara cepat dengan mengubah nama folder `amz_login_decoy` di dalam direktori `plugins/` menjadi nama lain, misalnya `amz_login_decoy_nonaktif`. SLiMS akan secara otomatis mengabaikan plugin tersebut dan memulihkan halaman login bawaan.
 
 ---
+<img width="867" height="1698" alt="msedge_jRilCgymI8" src="https://github.com/user-attachments/assets/384c218f-1862-40ff-80da-71c84ce1c1c1" />
 
 ## 🚀 Status Implementasi v1.0.0
 Plugin diimplementasikan secara **modular** (tidak ada satu pun file melebihi 1000 baris) di `plugins/amz_login_decoy/` dengan susunan berikut:
